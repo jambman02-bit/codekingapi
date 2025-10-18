@@ -4,7 +4,7 @@
   "description": "Email verification service for Dnest",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+   "start": "bash render-build.sh",
     "build": "echo 'Building...'"
   },
   "dependencies": {
