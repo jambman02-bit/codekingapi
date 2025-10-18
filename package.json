@@ -2,7 +2,7 @@
   "name": "dnest-email-service",
   "version": "1.0.0",
   "description": "Email verification service for Dnest",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
    "start": "bash render-build.sh",
     "build": "echo 'Building...'"
