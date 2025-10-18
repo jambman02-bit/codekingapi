@@ -1,11 +1,11 @@
 {
-  "name": "dnest-mailer",
+  "name": "dnest-email-service",
   "version": "1.0.0",
   "description": "Email verification service for Dnest",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node index.js",
+    "build": "echo 'Building...'"
   },
   "dependencies": {
     "express": "^4.18.2",
