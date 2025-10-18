@@ -17,8 +17,19 @@ function generateCode() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+// Debug environment variables
+console.log('🔧 Environment Check:');
+console.log('SMTP_USER:', process.env.SMTP_USER ? 'Set' : 'Not set');
+console.log('SMTP_PASS:', process.env.SMTP_PASS ? 'Set' : 'Not set');
+console.log('SMTP_HOST:', process.env.SMTP_HOST || 'Not set');
+console.log('SMTP_PORT:', process.env.SMTP_PORT || 'Not set');
+
 // Create email transporter
 function createTransporter() {
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        throw new Error('SMTP credentials not configured');
+    }
+
     return nodemailer.createTransporter({
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
         port: process.env.SMTP_PORT || 587,
@@ -38,70 +49,57 @@ async function sendVerificationEmail(email, code, username = 'User') {
         const mailOptions = {
             from: process.env.SMTP_USER,
             to: email,
-            subject: 'Verify Your Dnest Account - Registration Code',
+            subject: 'Verify Your Dnest Account',
             html: `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <style>
-                        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
-                        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
-                        .code { background: #f8f9fa; padding: 25px; text-align: center; margin: 25px 0; border-radius: 8px; border: 2px dashed #dee2e6; }
-                        .code-number { font-size: 42px; font-weight: bold; color: #333; letter-spacing: 8px; }
-                        .footer { background: #f8f9fa; padding: 15px; text-align: center; border-radius: 0 0 10px 10px; color: #666; font-size: 14px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <div class="header">
-                            <h1>Dnest Property Management</h1>
-                            <p>Email Verification</p>
-                        </div>
-                        
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+                        <h1 style="margin: 0;">Dnest Property Management</h1>
+                        <p style="margin: 5px 0 0 0;">Email Verification</p>
+                    </div>
+                    
+                    <div style="padding: 20px;">
                         <h2>Hello ${username},</h2>
                         <p>Welcome to Dnest! Please use the following verification code to complete your registration:</p>
                         
-                        <div class="code">
-                            <div class="code-number">${code}</div>
+                        <div style="background: #f8f9fa; padding: 25px; text-align: center; margin: 20px 0; border-radius: 8px; border: 2px dashed #dee2e6;">
+                            <div style="font-size: 42px; font-weight: bold; color: #333; letter-spacing: 8px;">${code}</div>
                         </div>
                         
                         <p><strong>This code will expire in 10 minutes.</strong></p>
                         <p>If you didn't request this code, please ignore this email.</p>
-                        
-                        <div class="footer">
-                            <p>Best regards,<br><strong>The Dnest Team</strong></p>
-                            <p style="font-size: 12px; color: #999; margin-top: 10px;">
-                                This is an automated message, please do not reply to this email.
-                            </p>
-                        </div>
                     </div>
-                </body>
-                </html>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; text-align: center; border-radius: 0 0 10px 10px; color: #666;">
+                        <p style="margin: 0;">Best regards,<br><strong>The Dnest Team</strong></p>
+                    </div>
+                </div>
             `
         };
 
         const result = await transporter.sendMail(mailOptions);
-        console.log(`✅ Email sent to ${email} - Message ID: ${result.messageId}`);
+        console.log(`✅ Email sent to ${email}`);
         return { success: true, messageId: result.messageId };
         
     } catch (error) {
-        console.error('❌ Email sending failed:', error);
+        console.error('❌ Email failed:', error.message);
         return { 
             success: false, 
-            error: error.message,
-            note: 'Check SMTP configuration in Render environment variables'
+            error: error.message
         };
     }
 }
 
 // Routes
 app.get('/', (req, res) => {
+    const emailConfigured = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
+    
     res.json({
         message: '🚀 Dnest Mailer API is running!',
         status: 'OK',
         timestamp: new Date().toISOString(),
-        email_configured: !!(process.env.SMTP_USER && process.env.SMTP_PASS),
+        email_configured: emailConfigured,
+        smtp_user_set: !!process.env.SMTP_USER,
+        smtp_pass_set: !!process.env.SMTP_PASS,
         endpoints: [
             'GET /health',
             'POST /send-registration-code',
@@ -111,12 +109,17 @@ app.get('/', (req, res) => {
 });
 
 app.get('/health', (req, res) => {
+    const emailConfigured = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
+    
     res.json({
         status: 'OK',
         service: 'Dnest Mailer',
         timestamp: new Date().toISOString(),
-        email_configured: !!(process.env.SMTP_USER && process.env.SMTP_PASS),
-        smtp_host: process.env.SMTP_HOST || 'Not set'
+        email_configured: emailConfigured,
+        smtp_user_set: !!process.env.SMTP_USER,
+        smtp_pass_set: !!process.env.SMTP_PASS,
+        smtp_host: process.env.SMTP_HOST || 'default (smtp.gmail.com)',
+        smtp_port: process.env.SMTP_PORT || 'default (587)'
     });
 });
 
@@ -131,24 +134,29 @@ app.post('/send-registration-code', async (req, res) => {
             });
         }
 
-        // Check if SMTP is configured
+        // Check SMTP configuration
         if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+            console.log('❌ SMTP not configured - missing credentials');
             return res.status(500).json({
                 success: false,
-                message: 'Email service not configured. Please check server settings.'
+                message: 'Email service not configured on server',
+                debug: {
+                    smtp_user_set: !!process.env.SMTP_USER,
+                    smtp_pass_set: !!process.env.SMTP_PASS
+                }
             });
         }
 
         // Generate code
         const code = generateCode();
         
-        // Store code (10 minutes expiry)
+        // Store code
         verificationCodes.set(email, {
             code: code,
             expiresAt: Date.now() + 10 * 60 * 1000
         });
 
-        console.log(`📧 Sending verification code to ${email}: ${code}`);
+        console.log(`📧 Attempting to send code to ${email}: ${code}`);
 
         // Send email
         const emailResult = await sendVerificationEmail(email, code, username);
@@ -156,16 +164,16 @@ app.post('/send-registration-code', async (req, res) => {
         if (emailResult.success) {
             res.json({
                 success: true,
-                message: 'Verification code sent to your email successfully!',
-                note: 'Please check your inbox (and spam folder)'
+                message: 'Verification code sent to your email! Please check your inbox.'
             });
         } else {
-            // If email fails, still return the code for debugging
+            // If email fails, provide the code for manual testing
             res.json({
                 success: true,
-                message: 'Code generated but email delivery failed',
+                message: 'Email delivery issue - use this code for testing',
                 debugCode: code,
-                emailError: emailResult.error
+                emailError: emailResult.error,
+                note: 'This would be sent via email in production'
             });
         }
 
@@ -235,8 +243,14 @@ app.post('/verify-code', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Dnest Mailer running on port ${PORT}`);
     console.log(`📍 Health: http://localhost:${PORT}/health`);
-    console.log(`📧 SMTP Configured: ${!!(process.env.SMTP_USER && process.env.SMTP_PASS)}`);
-    if (process.env.SMTP_USER) {
+    
+    const emailConfigured = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
+    console.log(`📧 Email Service: ${emailConfigured ? '✅ CONFIGURED' : '❌ NOT CONFIGURED'}`);
+    
+    if (emailConfigured) {
         console.log(`📧 SMTP User: ${process.env.SMTP_USER}`);
+        console.log(`📧 SMTP Host: ${process.env.SMTP_HOST || 'smtp.gmail.com'}`);
+    } else {
+        console.log('❌ Please set SMTP_USER and SMTP_PASS environment variables');
     }
 });
