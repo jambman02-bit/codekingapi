@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register | Dnest Property Management System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Add your custom CSS or use proper Tailwind installation */
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+        }
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #ffffff;
+            border-radius: 50%;
+            width: 1.5em;
+            height: 1.5em;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.5em;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .profile-picture-container {
+            opacity: 0.75;
+            height: 120px;
+            width: 120px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 50%;
+            border: 3px solid #e5e7eb;
+            background: #f9fafb;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            margin: 0 auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .profile-picture-container:hover {
+            opacity: 1;
+            border-color: #3b82f6;
+        }
+        .file-uploader {
+            opacity: 0;
+            height: 100%;
+            width: 100%;
+            cursor: pointer;
+            position: absolute;
+            top: 0%;
+            left: 0%;
+        }
+        .upload-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            color: #6b7280;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            padding: 8px;
+        }
+        .profile-picture-container:hover .upload-icon {
+            opacity: 1;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: #e5e7eb;
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+            display: none;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #10b981;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .email-status {
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+        
+        /* Basic form styles */
+        .form-input {
+            width: 100%;
+            padding-left: 2.5rem;
+            padding-right: 1rem;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            outline: none;
+            transition: all 0.15s ease-in-out;
+        }
+        .form-input:focus {
+            ring: 2px;
+            ring-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+        .form-select {
+            width: 100%;
+            padding-left: 2.5rem;
+            padding-right: 1rem;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            outline: none;
+            transition: all 0.15s ease-in-out;
+        }
+        .form-select:focus {
+            ring: 2px;
+            ring-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 0.5rem 1rem;
+            border: transparent;
+            border-radius: 0.375rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            font-size: 1.125rem;
+            font-weight: 500;
+            color: white;
+            background-color: #16a34a;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #15803d;
+        }
+        .verification-section {
+            display: none;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            border: 1px solid #e9ecef;
+        }
+        .code-inputs {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+        .code-input {
+            width: 3rem;
+            height: 3rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: 2px solid #d1d5db;
+            border-radius: 0.375rem;
+            outline: none;
+            transition: all 0.15s ease-in-out;
+        }
+        .code-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .timer {
+            text-align: center;
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin: 0.5rem 0;
+        }
+        .resend-link {
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+        .resend-link a {
+            color: #3b82f6;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .resend-link a:hover {
+            text-decoration: underline;
+        }
+        .resend-link a.disabled {
+            color: #9ca3af;
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+
+    <!-- Header Section -->
+    <div class="w-full bg-cover bg-center py-12" style="background-image: url('img/breadcromb.jpg');">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center text-white">
+                <a href="index.html" class="flex items-center space-x-2 text-2xl sm:text-3xl font-extrabold tracking-wide uppercase text-white hover:text-blue-400 transition drop-shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h5m4 0h5a1 1 0 001-1V10" />
+                    </svg>
+                    <span class="drop-shadow-md">
+                        <span class="text-green-400">D</span>nest
+                    </span>
+                </a>
+                <nav>
+                    <ol class="flex space-x-2">
+                        <li><a href="index.html" class="text-white hover:underline"><i class="fas fa-home mr-1"></i>Home</a></li>
+                        <li>/</li>
+                        <li><i class="fas fa-user-plus mr-1"></i>Register</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Form -->
+    <div class="flex-grow flex items-center justify-center p-4 bg-gray-100">
+        <div class="w-full max-w-md bg-white rounded-lg shadow-xl p-8 space-y-6">
+            <div class="text-center mb-6">
+                <i class="fas fa-user-plus text-5xl text-green-500 mb-2"></i>
+                <h1 class="text-2xl font-bold">Join Us Today!</h1>
+                <p class="text-sm text-gray-600">Create your new account</p>
+            </div>
+
+            <!-- Profile Picture Upload Section -->
+            <div class="text-center mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-4">Profile Picture</label>
+                <div class="profile-picture-container" id="profilePictureContainer">
+                    <div class="upload-icon">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <input type="file" 
+                           id="profilePic" 
+                           class="file-uploader" 
+                           accept="image/*" 
+                           onchange="handleProfilePicUpload(this)" />
+                </div>
+                <div class="progress-bar" id="uploadProgressBar">
+                    <div class="progress-fill" id="uploadProgressFill"></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-2" id="fileInfo">JPEG, PNG or GIF - Max 4MB</p>
+                <input type="hidden" id="profilePicBase64" name="profilePicBase64">
+            </div>
+            
+            <!-- Registration Form -->
+            <form class="space-y-4" id="registerForm">
+                <div>
+                    <label for="register-username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <div class="relative">
+                        <input type="text" id="register-username" name="username" placeholder="Your username" required
+                            class="form-input">
+                        <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                            <i data-feather="user"></i>
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <label for="register-email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                    <div class="relative">
+                        <input type="email" id="register-email" name="email" placeholder="you@example.com" required
+                            class="form-input">
+                        <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                            <i data-feather="mail"></i>
+                        </span>
+                    </div>
+                    <div class="email-status text-green-600 hidden" id="emailStatus"></div>
+                </div>
+                <div>
+                    <label for="register-phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <div class="relative">
+                        <input type="tel" id="register-phone" name="phone" placeholder="e.g., +2348012345678" required
+                            class="form-input">
+                        <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                            <i data-feather="phone"></i>
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <label for="register-password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <div class="relative">
+                        <input type="password" id="register-password" name="password" placeholder="••••••••" required
+                            autocomplete="new-password"
+                            class="form-input pr-10">
+                        <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                            <i data-feather="lock"></i>
+                        </span>
+                        <span class="absolute inset-y-0 right-3 flex items-center text-gray-400 cursor-pointer" onclick="toggleRegisterPassword()">
+                            <i id="registerEyeIcon" data-feather="eye"></i>
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <label for="register-confirm-password" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                    <div class="relative">
+                        <input type="password" id="register-confirm-password" name="confirm_password" placeholder="••••••••" required
+                            autocomplete="new-password"
+                            class="form-input">
+                        <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                            <i data-feather="lock"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="user-role" class="block text-sm font-medium text-gray-700 mb-1">I am a...</label>
+                    <div class="relative">
+                        <select id="user-role" name="role" required
+                            class="form-select">
+                            <option value="">Select your role</option>
+                            <option value="client">Client</option>
+                            <option value="agent">Agent</option>
+                            <option value="hotelier">Hotelier (Subscription Base)</option>
+                        </select>
+                        <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                            <i data-feather="briefcase"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <button type="submit" id="registerBtn"
+                        class="btn-primary">
+                    Send Verification Code
+                </button>
+            </form>
+
+            <!-- Verification Code Section -->
+            <div id="verificationSection" class="verification-section">
+                <h3 class="text-lg font-semibold text-center mb-4">Enter Verification Code</h3>
+                <p class="text-sm text-gray-600 text-center mb-4">
+                    We've sent a 6-digit verification code to your email address
+                </p>
+                
+                <div class="code-inputs">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 1)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 2)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 3)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 4)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 5)">
+                    <input type="text" class="code-input" maxlength="1" oninput="moveToNext(this, 6)">
+                </div>
+
+                <div class="timer" id="timer">
+                    Code expires in: <span id="countdown">10:00</span>
+                </div>
+
+                <button type="button" onclick="verifyCode()" 
+                        class="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200 font-medium">
+                    Verify & Complete Registration
+                </button>
+
+                <div class="resend-link">
+                    <a id="resendLink" onclick="resendVerificationCode()">Resend Code</a>
+                </div>
+            </div>
+
+            <p class="mt-4 text-center text-gray-600 text-sm">
+                Already have an account? <a href="login.html" class="font-medium text-blue-600 hover:text-blue-500">Login here</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="hotelierModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-auto text-center space-y-4">
+            <h3 class="text-2xl font-bold text-gray-800">Subscription Required!</h3>
+            <p class="text-gray-700">
+                Registering as a <b>Hotelier</b> will require a subscription to access full features.
+                Please proceed with registration, and you will be guided to subscription options later.
+            </p>
+            <button id="closeHotelierModal" class="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">
+                Understood
+            </button>
+        </div>
+    </div>
+
+    <div id="messageModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-auto text-center space-y-4">
+            <h3 id="messageModalTitle" class="text-2xl font-bold text-gray-800"></h3>
+            <p id="messageModalContent" class="text-gray-700"></p>
+            <button id="closeMessageModal" class="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">
+                OK
+            </button>
+        </div>
+    </div>
+<script>
+    // Initialize Feather icons
+    feather.replace();
+
+    // Your Render service URL - UPDATE THIS!
+    const API_BASE_URL = 'https://codekingapi.onrender.com';
+
+    let countdownInterval;
+    let currentUserData = {};
+
+    // Utility functions
+    function showLoader(button, text = 'Loading...') {
+        const originalText = button.innerHTML;
+        button.dataset.originalText = originalText;
+        button.disabled = true;
+        button.innerHTML = `<span class="loader"></span> ${text}`;
+    }
+
+    function hideLoader(button) {
+        button.disabled = false;
+        if (button.dataset.originalText) {
+            button.innerHTML = button.dataset.originalText;
+        }
+    }
+
+    function showMessage(title, message, isError = false) {
+        const modal = document.getElementById('messageModal');
+        const titleEl = document.getElementById('messageModalTitle');
+        const contentEl = document.getElementById('messageModalContent');
+        
+        titleEl.textContent = title;
+        contentEl.innerHTML = message;
+        if (isError) {
+            contentEl.style.color = '#dc2626';
+        } else {
+            contentEl.style.color = '#065f46';
+        }
+        modal.classList.remove('hidden');
+    }
+
+    // Code input functions
+    function moveToNext(input, nextIndex) {
+        const inputs = document.querySelectorAll('.code-input');
+        if (input.value.length === 1 && nextIndex < inputs.length) {
+            inputs[nextIndex].focus();
+        }
+        if (input.value.length === 0 && nextIndex > 1) {
+            inputs[nextIndex - 2].focus();
+        }
+    }
+
+    function getVerificationCode() {
+        const inputs = document.querySelectorAll('.code-input');
+        let code = '';
+        inputs.forEach(input => code += input.value);
+        return code;
+    }
+
+    function clearVerificationCode() {
+        document.querySelectorAll('.code-input').forEach(input => input.value = '');
+    }
+
+    // Timer function
+    function startTimer(duration = 600) {
+        let timer = duration;
+        const countdownEl = document.getElementById('countdown');
+        const resendLink = document.getElementById('resendLink');
+        
+        resendLink.classList.add('disabled');
+        clearInterval(countdownInterval);
+        
+        countdownInterval = setInterval(() => {
+            const minutes = Math.floor(timer / 60);
+            const seconds = timer % 60;
+            countdownEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (--timer < 0) {
+                clearInterval(countdownInterval);
+                resendLink.classList.remove('disabled');
+                countdownEl.textContent = 'Expired';
+            }
+        }, 1000);
+    }
+
+    // API Functions
+    async function sendVerificationCode(email, username) {
+        try {
+            console.log('📧 Sending verification code to:', email);
+            
+            const response = await fetch(`${API_BASE_URL}/send-registration-code`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    email: email,
+                    username: username 
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('📧 API Response:', result);
+            return result;
+
+        } catch (error) {
+            console.error('❌ Network error:', error);
+            return {
+                success: false,
+                message: 'Cannot connect to server. Please try again later.'
+            };
+        }
+    }
+
+    async function verifyCodeWithAPI(email, code) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/verify-code`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, code })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            return await response.json();
+
+        } catch (error) {
+            console.error('❌ Network error:', error);
+            return {
+                success: false,
+                message: 'Cannot connect to server. Please try again.'
+            };
+        }
+    }
+
+    // Form submission
+    document.getElementById("registerForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        // Get form data
+        const formData = {
+            username: document.getElementById("register-username").value.trim(),
+            email: document.getElementById("register-email").value.trim(),
+            phone: document.getElementById("register-phone").value.trim(),
+            password: document.getElementById("register-password").value,
+            confirmPassword: document.getElementById("register-confirm-password").value,
+            role: document.getElementById("user-role").value,
+            profilePicture: document.getElementById("profilePicBase64").value
+        };
+
+        // Validation
+        if (formData.password !== formData.confirmPassword) {
+            showMessage('Error', 'Passwords do not match.', true);
+            return;
+        }
+
+        if (!formData.role) {
+            showMessage('Error', 'Please select your role.', true);
+            return;
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            showMessage('Error', 'Please enter a valid email address.', true);
+            return;
+        }
+
+        // Store for later
+        currentUserData = formData;
+
+        // Send verification code
+        const registerBtn = document.getElementById('registerBtn');
+        showLoader(registerBtn, "Sending Email...");
+
+        const result = await sendVerificationCode(formData.email, formData.username);
+
+        if (result.success) {
+            // Show verification section
+            document.getElementById('verificationSection').style.display = 'block';
+            startTimer();
+            
+            // Handle different response scenarios
+            if (result.debugCode) {
+                // Email failed, show debug code
+                showMessage(
+                    'Email Delivery Issue', 
+                    `We had trouble sending to your email.<br>Please use this code: <strong style="font-size: 24px;">${result.debugCode}</strong>`
+                );
+            } else {
+                // Email sent successfully
+                showMessage(
+                    'Check Your Email', 
+                    `We've sent a verification code to:<br><strong>${formData.email}</strong><br><br>Please check your inbox (and spam folder).`
+                );
+            }
+            
+            // Focus first input
+            setTimeout(() => {
+                document.querySelector('.code-input').focus();
+            }, 100);
+            
+        } else {
+            showMessage('Error', result.message, true);
+        }
+
+        hideLoader(registerBtn);
+    });
+
+    // Verify code
+    window.verifyCode = async function() {
+        const code = getVerificationCode();
+        const email = currentUserData.email;
+
+        if (code.length !== 6) {
+            showMessage('Error', 'Please enter the complete 6-digit code.', true);
+            return;
+        }
+
+        const verifyBtn = document.querySelector('#verificationSection button');
+        showLoader(verifyBtn, "Verifying...");
+
+        const result = await verifyCodeWithAPI(email, code);
+
+        if (result.success) {
+            showMessage('Success!', '🎉 Email verified successfully! Your account has been created.<br><br>Redirecting to login...', false);
+            
+            // Complete registration (in real app, send to your main backend)
+            setTimeout(() => {
+                // Store registration data or send to your main API
+                console.log('Registration completed:', currentUserData);
+                window.location.href = 'login.html';
+            }, 2000);
+            
+        } else {
+            showMessage('Verification Failed', result.message, true);
+        }
+
+        hideLoader(verifyBtn);
+    };
+
+    // Resend code
+    window.resendVerificationCode = async function() {
+        const email = currentUserData.email;
+        const username = currentUserData.username;
+        const resendLink = document.getElementById('resendLink');
+        
+        if (resendLink.classList.contains('disabled')) {
+            return;
+        }
+
+        const registerBtn = document.getElementById('registerBtn');
+        showLoader(registerBtn, "Resending...");
+
+        const result = await sendVerificationCode(email, username);
+
+        if (result.success) {
+            if (result.debugCode) {
+                showMessage('Code Regenerated', `New code: <strong>${result.debugCode}</strong>`);
+            } else {
+                showMessage('Email Sent', 'A new verification code has been sent to your email.');
+            }
+            clearVerificationCode();
+            startTimer();
+            setTimeout(() => {
+                document.querySelector('.code-input').focus();
+            }, 100);
+        } else {
+            showMessage('Error', result.message, true);
+        }
+
+        hideLoader(registerBtn);
+    };
+
+    // Modal handlers
+    document.getElementById('closeMessageModal').addEventListener('click', function() {
+        document.getElementById('messageModal').classList.add('hidden');
+    });
+
+    document.getElementById('user-role').addEventListener('change', function() {
+        if (this.value === 'hotelier') {
+            document.getElementById('hotelierModal').classList.remove('hidden');
+        }
+    });
+
+    document.getElementById('closeHotelierModal').addEventListener('click', function() {
+        document.getElementById('hotelierModal').classList.add('hidden');
+    });
+
+    // Test connection on load
+    window.addEventListener('load', async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/health`);
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Backend connected - Email service:', data.email_configured ? 'CONFIGURED' : 'NOT CONFIGURED');
+            }
+        } catch (error) {
+            console.log('❌ Cannot connect to backend');
+        }
+    });
+</script>
+</body>
+</html>
