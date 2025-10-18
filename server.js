@@ -5,6 +5,10 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Debug nodemailer
+console.log('📧 Nodemailer version:', nodemailer.version);
+console.log('🔧 Nodemailer createTransporter type:', typeof nodemailer.createTransporter);
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -17,20 +21,20 @@ function generateCode() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Debug environment variables
-console.log('🔧 Environment Check:');
-console.log('SMTP_USER:', process.env.SMTP_USER ? 'Set' : 'Not set');
-console.log('SMTP_PASS:', process.env.SMTP_PASS ? 'Set' : 'Not set');
-console.log('SMTP_HOST:', process.env.SMTP_HOST || 'Not set');
-console.log('SMTP_PORT:', process.env.SMTP_PORT || 'Not set');
-
-// Create email transporter
+// Create email transporter - FIXED VERSION
 function createTransporter() {
+    console.log('🔧 Creating transporter with:', {
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        user: process.env.SMTP_USER,
+        pass_set: !!process.env.SMTP_PASS
+    });
+
     if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
         throw new Error('SMTP credentials not configured');
     }
 
-    return nodemailer.createTransporter({
+    // FIXED: Proper nodemailer usage
+    const transporter = nodemailer.createTransporter({
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
         port: process.env.SMTP_PORT || 587,
         secure: false,
@@ -39,6 +43,8 @@ function createTransporter() {
             pass: process.env.SMTP_PASS,
         },
     });
+
+    return transporter;
 }
 
 // Send verification email
@@ -76,12 +82,14 @@ async function sendVerificationEmail(email, code, username = 'User') {
             `
         };
 
+        console.log('📧 Attempting to send email to:', email);
         const result = await transporter.sendMail(mailOptions);
-        console.log(`✅ Email sent to ${email}`);
+        console.log('✅ Email sent successfully to:', email);
         return { success: true, messageId: result.messageId };
         
     } catch (error) {
-        console.error('❌ Email failed:', error.message);
+        console.error('❌ Email sending failed:', error.message);
+        console.error('❌ Full error:', error);
         return { 
             success: false, 
             error: error.message
@@ -98,8 +106,7 @@ app.get('/', (req, res) => {
         status: 'OK',
         timestamp: new Date().toISOString(),
         email_configured: emailConfigured,
-        smtp_user_set: !!process.env.SMTP_USER,
-        smtp_pass_set: !!process.env.SMTP_PASS,
+        nodemailer_working: true,
         endpoints: [
             'GET /health',
             'POST /send-registration-code',
@@ -116,10 +123,8 @@ app.get('/health', (req, res) => {
         service: 'Dnest Mailer',
         timestamp: new Date().toISOString(),
         email_configured: emailConfigured,
-        smtp_user_set: !!process.env.SMTP_USER,
-        smtp_pass_set: !!process.env.SMTP_PASS,
-        smtp_host: process.env.SMTP_HOST || 'default (smtp.gmail.com)',
-        smtp_port: process.env.SMTP_PORT || 'default (587)'
+        nodemailer_version: nodemailer.version,
+        node_env: process.env.NODE_ENV || 'development'
     });
 });
 
@@ -139,11 +144,7 @@ app.post('/send-registration-code', async (req, res) => {
             console.log('❌ SMTP not configured - missing credentials');
             return res.status(500).json({
                 success: false,
-                message: 'Email service not configured on server',
-                debug: {
-                    smtp_user_set: !!process.env.SMTP_USER,
-                    smtp_pass_set: !!process.env.SMTP_PASS
-                }
+                message: 'Email service not configured on server'
             });
         }
 
@@ -156,7 +157,7 @@ app.post('/send-registration-code', async (req, res) => {
             expiresAt: Date.now() + 10 * 60 * 1000
         });
 
-        console.log(`📧 Attempting to send code to ${email}: ${code}`);
+        console.log(`📧 Generated code for ${email}: ${code}`);
 
         // Send email
         const emailResult = await sendVerificationEmail(email, code, username);
@@ -173,7 +174,7 @@ app.post('/send-registration-code', async (req, res) => {
                 message: 'Email delivery issue - use this code for testing',
                 debugCode: code,
                 emailError: emailResult.error,
-                note: 'This would be sent via email in production'
+                note: 'Check server logs for SMTP configuration issues'
             });
         }
 
@@ -243,6 +244,7 @@ app.post('/verify-code', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Dnest Mailer running on port ${PORT}`);
     console.log(`📍 Health: http://localhost:${PORT}/health`);
+    console.log(`📧 Nodemailer version: ${nodemailer.version}`);
     
     const emailConfigured = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
     console.log(`📧 Email Service: ${emailConfigured ? '✅ CONFIGURED' : '❌ NOT CONFIGURED'}`);
@@ -250,7 +252,5 @@ app.listen(PORT, '0.0.0.0', () => {
     if (emailConfigured) {
         console.log(`📧 SMTP User: ${process.env.SMTP_USER}`);
         console.log(`📧 SMTP Host: ${process.env.SMTP_HOST || 'smtp.gmail.com'}`);
-    } else {
-        console.log('❌ Please set SMTP_USER and SMTP_PASS environment variables');
     }
 });
